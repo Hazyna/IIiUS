@@ -1,0 +1,43 @@
+#!/bin/bash
+
+echo "Podaj imie: "
+read imie
+echo "Podaj nazwisko: "
+read nazwisko
+echo "Wprowadziles: " $imie $nazwisko;
+
+imie=$(echo $imie | tr [:upper:] [:lower:])
+nazwisko=$(echo $nazwisko | tr [:upper:] [:lower:])
+
+p_litera=$(echo $imie | cut -c 1)
+username=$p_litera$nazwisko
+
+#echo $username
+x=1
+temp=$username
+while [ test ] ; do
+	if cut -d: -f1 /etc/passwd | grep "$username" > /dev/null ; then
+		#echo "Taki uzytkownik juz istnieje"
+		let "x=$x+1"
+		username=$temp$x
+	else 
+		break;
+	fi
+done
+
+#echo " udalo sie " 
+pass=$username
+useradd -d /home/"$username" -m -g users -s /bin/bash "$username" -p $(openssl passwd -1 $pass) 
+
+passwd -e $username
+
+echo "alias ll='ls -l'" >> /home/"$username"/.bashrc
+echo "alias kat_dom='cd /home/'$username'/'" >> /home/"$username"/.bashrc
+
+echo "Login: $username"
+
+if [ "$?" = 0 ] ; then
+#	mkdir /home/$username
+	mkdir /home/$username/public_html
+	touch /home/$username/public_html/private_html
+fi
